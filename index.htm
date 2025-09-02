@@ -100,14 +100,23 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInWithCustomToken, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, doc, setDoc, deleteDoc, onSnapshot, query, addDoc, serverTimestamp, getDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, doc, setDoc, deleteDoc, onSnapshot, query, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         import { setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // Variáveis de configuração fornecidas pelo Canvas
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
-        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+        // Substitua os valores abaixo com sua própria configuração do Firebase
+        // Você pode encontrar estes valores no seu Firebase Console > Configurações do Projeto
+        const firebaseConfig = {
+            apiKey: "AIzaSyBcdRx4n1_U5Y46p06QqOhj1kRZCOG9FMA",
+  authDomain: "notas-7f176.firebaseapp.com",
+  databaseURL: "https://notas-7f176-default-rtdb.firebaseio.com",
+  projectId: "notas-7f176",
+  storageBucket: "notas-7f176.firebasestorage.app",
+  messagingSenderId: "124605924937",
+  appId: "1:124605924937:web:6e755c61716b3fa3f42198",
+  measurementId: "G-756ZPMZ0PD"
+        };
+        const appId = firebaseConfig.projectId; // Usando o ID do projeto como ID do aplicativo
 
         // Ativa o log de debug para o Firestore
         setLogLevel('Debug');
@@ -143,12 +152,8 @@
                     return;
                 }
 
-                // Autentica o usuário
-                if (initialAuthToken) {
-                    await signInWithCustomToken(auth, initialAuthToken);
-                } else {
-                    await signInAnonymously(auth);
-                }
+                // Autentica o usuário anonimamente
+                await signInAnonymously(auth);
 
                 // Obtém o ID do usuário após a autenticação
                 userId = auth.currentUser?.uid || crypto.randomUUID();
@@ -174,17 +179,14 @@
                 return;
             }
             
-            // Usando o caminho seguro para dados privados do usuário
             const notesCollectionRef = collection(db, 'artifacts', appId, 'users', userId, 'notes');
 
-            // onSnapshot escuta as mudanças em tempo real
             onSnapshot(notesCollectionRef, (snapshot) => {
                 const notes = [];
                 snapshot.forEach(doc => {
                     notes.push({ id: doc.id, ...doc.data() });
                 });
                 
-                // Ordena as notas por data de criação em ordem decrescente
                 notes.sort((a, b) => (b.createdAt?.toMillis() || 0) - (a.createdAt?.toMillis() || 0));
                 
                 renderNotes(notes);
@@ -199,7 +201,7 @@
          * @param {Array<Object>} notes - A lista de notas.
          */
         function renderNotes(notes) {
-            notesListEl.innerHTML = ''; // Limpa a lista existente
+            notesListEl.innerHTML = ''; 
             
             if (notes.length === 0) {
                 noNotesMessageEl.style.display = 'block';
@@ -259,16 +261,13 @@
             statusMessageEl.textContent = "Salvando...";
 
             try {
-                // Usando o caminho seguro para dados privados do usuário
                 const notesCollectionRef = collection(db, 'artifacts', appId, 'users', userId, 'notes');
 
                 if (currentEditingNoteId) {
-                    // Atualiza a nota existente
                     const docRef = doc(notesCollectionRef, currentEditingNoteId);
                     await setDoc(docRef, { text: noteText, updatedAt: serverTimestamp() }, { merge: true });
                     statusMessageEl.textContent = "Nota atualizada com sucesso!";
                 } else {
-                    // Adiciona uma nova nota
                     await addDoc(notesCollectionRef, {
                         text: noteText,
                         createdAt: serverTimestamp(),
@@ -276,7 +275,7 @@
                     });
                     statusMessageEl.textContent = "Nota salva com sucesso!";
                 }
-                noteTextEl.value = ''; // Limpa a área de texto
+                noteTextEl.value = '';
                 currentEditingNoteId = null;
                 saveButton.textContent = 'Salvar Nota';
             } catch (e) {
@@ -295,7 +294,6 @@
             statusMessageEl.textContent = "Deletando nota...";
 
             try {
-                // Usando o caminho seguro para dados privados do usuário
                 const notesCollectionRef = collection(db, 'artifacts', appId, 'users', userId, 'notes');
                 const docRef = doc(notesCollectionRef, noteId);
                 await deleteDoc(docRef);
