@@ -1,314 +1,372 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-br">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Meu Bloco de Notas Online</title>
+    <title>Minhas Notas</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
-        
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
         body {
             font-family: 'Inter', sans-serif;
-            background: #1a202c;
-            color: #e5e7eb;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            padding: 2rem;
-            background: linear-gradient(135deg, #1f2937 0%, #111827 100%);
+            background-color: #f3f4f6;
         }
-
-        /* Classes Tailwind CSS customizadas para o layout */
-        .w-full { width: 100%; }
-        .max-w-2xl { max-width: 42rem; }
-        .bg-gray-800 { background-color: #1f2937; }
-        .rounded-3xl { border-radius: 1.5rem; }
-        .shadow-2xl { box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); }
-        .p-8 { padding: 2rem; }
-        .flex { display: flex; }
-        .flex-col { flex-direction: column; }
-        .gap-6 { gap: 1.5rem; }
-        .text-3xl { font-size: 1.875rem; line-height: 2.25rem; }
-        .font-bold { font-weight: 700; }
-        .text-center { text-align: center; }
-        .text-indigo-400 { color: #c4b5fd; }
-        .text-sm { font-size: 0.875rem; line-height: 1.25rem; }
-        .font-medium { font-weight: 500; }
-        .text-gray-400 { color: #9ca3af; }
-        .text-gray-500 { color: #6b7280; }
-        .mb-4 { margin-bottom: 1rem; }
-        .font-mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
-        .bg-gray-700 { background-color: #374151; }
-        .px-3 { padding-left: 0.75rem; padding-right: 0.75rem; }
-        .py-1 { padding-top: 0.25rem; padding-bottom: 0.25rem; }
-        .rounded-full { border-radius: 9999px; }
-        .rounded-xl { border-radius: 0.75rem; }
-        .gap-4 { gap: 1rem; }
-        .border-2 { border-width: 2px; }
-        .border-gray-600 { border-color: #4b5563; }
-        .text-gray-200 { color: #e5e7eb; }
-        .placeholder-gray-500::placeholder { color: #6b7280; }
-        .focus\:outline-none:focus { outline: 2px solid transparent; outline-offset: 2px; }
-        .focus\:ring-2:focus { box-shadow: 0 0 0 2px #c4b5fd; }
-        .focus\:ring-indigo-300:focus { --tw-ring-color: #c4b5fd; }
-        .transition-all { transition-property: all; transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1); transition-duration: 150ms; }
-        .resize-none { resize: none; }
-        .bg-indigo-500 { background-color: #6366f1; }
-        .text-white { color: #ffffff; }
-        .font-semibold { font-weight: 600; }
-        .py-3 { padding-top: 0.75rem; padding-bottom: 0.75rem; }
-        .rounded-lg { border-radius: 0.5rem; }
-        .hover\:bg-indigo-600:hover { background-color: #4f46e5; }
-        .focus\:ring-offset-2:focus { box-shadow: 0 0 0 2px #1f2937; }
-        .transition-colors { transition-property: color, background-color, border-color, text-decoration-color, fill, stroke; transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1); transition-duration: 150ms; }
-        .text-2xl { font-size: 1.5rem; line-height: 2rem; }
-        .mt-6 { margin-top: 1.5rem; }
-        .text-gray-300 { color: #d1d5db; }
-        .gap-3 { gap: 0.75rem; }
-        .cursor-pointer { cursor: pointer; }
-        .hover\:bg-gray-700:hover { background-color: #4b5563; }
-        .whitespace-pre-wrap { white-space: pre-wrap; }
-        .flex-1 { flex: 1 1 0%; }
-        .justify-end { justify-content: flex-end; }
-        .text-xs { font-size: 0.75rem; line-height: 1rem; }
-        .hover\:text-red-400:hover { color: #f87171; }
+        .animate-spin {
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
     </style>
 </head>
-<body class="bg-gray-900 text-gray-100 flex flex-col items-center p-4 min-h-screen">
-    <main class="w-full max-w-2xl bg-gray-800 rounded-3xl shadow-2xl p-8 flex flex-col gap-6">
-        <h1 class="text-3xl font-bold text-center text-indigo-400">Bloco de Notas Online</h1>
-        <div id="status-message" class="text-center text-sm font-medium text-gray-400"></div>
+<body class="bg-gray-100 min-h-screen flex items-center justify-center p-4 sm:p-6 lg:p-8">
 
-        <div id="user-info" class="text-sm text-center text-gray-400 mb-4">
-            ID do Usuário: <span id="user-id" class="font-mono bg-gray-700 px-3 py-1 rounded-full">Carregando...</span>
+    <!-- Container Principal do App -->
+    <div class="bg-white p-6 sm:p-8 lg:p-10 rounded-3xl shadow-2xl w-full max-w-4xl flex flex-col items-center">
+
+        <!-- Logo e Título -->
+        <h1 class="text-3xl sm:text-4xl font-bold text-gray-800 mb-6">
+            <span class="text-sky-500">Minhas</span> Notas
+        </h1>
+
+        <!-- Mensagem de Erro/Sucesso -->
+        <div id="message-container" class="w-full text-center text-sm font-medium mb-4"></div>
+        
+        <!-- Formulário de Autenticação -->
+        <div id="auth-form-container" class="w-full transition-opacity duration-300">
+            <h2 id="auth-title" class="text-xl font-semibold text-gray-700 text-center mb-6">Faça login</h2>
+            <form id="auth-form" class="space-y-4">
+                <div id="name-input-div" class="hidden">
+                    <input id="name-input" type="text" placeholder="Nome Completo" class="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-sky-500 focus:outline-none transition-all">
+                </div>
+                <div>
+                    <input id="email-input" type="email" placeholder="E-mail" required class="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-sky-500 focus:outline-none transition-all">
+                </div>
+                <div>
+                    <input id="password-input" type="password" placeholder="Senha" required class="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-sky-500 focus:outline-none transition-all">
+                </div>
+                <div id="confirm-password-div" class="hidden">
+                    <input id="confirm-password-input" type="password" placeholder="Confirme a senha" class="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-sky-500 focus:outline-none transition-all">
+                </div>
+                <button type="submit" id="auth-button" class="w-full bg-sky-500 text-white font-bold py-3 rounded-xl hover:bg-sky-600 transition-all shadow-lg transform active:scale-95">
+                    Login
+                </button>
+            </form>
+            <p class="text-center text-sm text-gray-500 mt-4">
+                Não tem uma conta? 
+                <a href="#" id="toggle-auth-link" class="text-sky-500 hover:text-sky-600 font-medium">Cadastre-se</a>
+            </p>
         </div>
 
-        <div class="flex flex-col gap-4">
-            <textarea id="note-text" rows="10" class="w-full bg-gray-700 border-2 border-gray-600 rounded-xl p-4 text-gray-200 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-300 transition-all resize-none" placeholder="Digite sua nota aqui..."></textarea>
-            <button id="save-note-button" class="w-full bg-indigo-500 text-white font-semibold py-3 rounded-lg hover:bg-indigo-600 focus:outline-none focus:ring-2 focus:ring-indigo-300 focus:ring-offset-2 focus:ring-offset-gray-900 transition-colors">
-                Salvar Nota
-            </button>
+        <!-- Interface do Aplicativo de Notas -->
+        <div id="notes-app-container" class="hidden w-full transition-opacity duration-300">
+            <div class="flex justify-between items-center w-full mb-6">
+                <div class="flex items-center space-x-4">
+                    <label for="avatar-upload" class="cursor-pointer relative">
+                        <img id="user-avatar" class="h-12 w-12 rounded-full border-2 border-sky-500 object-cover" src="https://placehold.co/100x100/A0A0A0/ffffff?text=User" alt="Foto de Perfil">
+                        <div id="avatar-upload-spinner" class="absolute inset-0 flex items-center justify-center bg-white bg-opacity-75 rounded-full hidden">
+                            <svg class="animate-spin h-5 w-5 text-sky-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                        </div>
+                    </label>
+                    <input type="file" id="avatar-upload" accept="image/*" class="hidden">
+                    <div class="flex flex-col">
+                        <span id="user-name" class="font-bold text-lg text-gray-800"></span>
+                        <span id="user-email" class="font-medium text-gray-600 truncate text-sm max-w-xs"></span>
+                    </div>
+                </div>
+                <button id="logout-button" class="text-gray-400 hover:text-gray-600 transform hover:scale-110 transition-transform">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                    </svg>
+                </button>
+            </div>
+
+            <!-- Formulário para Adicionar Notas -->
+            <form id="add-note-form" class="space-y-4 mb-8 w-full">
+                <input id="note-title-input" type="text" placeholder="Título da nota" required class="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-sky-500 focus:outline-none transition-all">
+                <textarea id="note-content-input" placeholder="Escreva sua nota aqui..." required rows="5" class="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-sky-500 focus:outline-none transition-all"></textarea>
+                <button type="submit" class="w-full bg-sky-500 text-white font-bold py-3 rounded-xl hover:bg-sky-600 transition-all shadow-lg transform active:scale-95">
+                    Adicionar Nota
+                </button>
+            </form>
+
+            <!-- Lista de Notas -->
+            <div id="notes-list" class="w-full grid gap-6 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+                <!-- Notas serão renderizadas aqui -->
+            </div>
         </div>
 
-        <h2 class="text-2xl font-semibold text-center mt-6 text-gray-300">Minhas Notas</h2>
-        <div id="notes-list" class="flex flex-col gap-3">
-            <!-- As notas serão renderizadas aqui pelo JavaScript -->
-            <p class="text-center text-gray-500" id="no-notes-message">Nenhuma nota encontrada. Crie sua primeira nota acima!</p>
-        </div>
-    </main>
+    </div>
 
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, doc, setDoc, deleteDoc, onSnapshot, query, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-        import { setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+    <script>
+        // Supabase URL e API Key fornecidos pelo usuário
+        const supabaseUrl = 'https://dnrvxzcdzvdexawijfcm.supabase.co';
+        const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRucnZ4emNkenZkZXhhd2lqZmNtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTY4MjU1MTIsImV4cCI6MjA3MjQwMTUxMn0.YgjULrTvX44pud2JRGRtLd1aq_TdVabDvhTegREiA9E';
 
-        // Substitua os valores abaixo com sua própria configuração do Firebase
-        // Você pode encontrar estes valores no seu Firebase Console > Configurações do Projeto
-        const firebaseConfig = {
-            apiKey: "AIzaSyBcdRx4n1_U5Y46p06QqOhj1kRZCOG9FMA",
-  authDomain: "notas-7f176.firebaseapp.com",
-  databaseURL: "https://notas-7f176-default-rtdb.firebaseio.com",
-  projectId: "notas-7f176",
-  storageBucket: "notas-7f176.firebasestorage.app",
-  messagingSenderId: "124605924937",
-  appId: "1:124605924937:web:6e755c61716b3fa3f42198",
-  measurementId: "G-756ZPMZ0PD"
-        };
-        const appId = firebaseConfig.projectId; // Usando o ID do projeto como ID do aplicativo
+        const { createClient } = window.supabase;
+        const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
-        // Ativa o log de debug para o Firestore
-        setLogLevel('Debug');
+        // Elementos do DOM
+        const authFormContainer = document.getElementById('auth-form-container');
+        const notesAppContainer = document.getElementById('notes-app-container');
+        const authForm = document.getElementById('auth-form');
+        const authTitle = document.getElementById('auth-title');
+        const authButton = document.getElementById('auth-button');
+        const toggleAuthLink = document.getElementById('toggle-auth-link');
+        const nameInputDiv = document.getElementById('name-input-div');
+        const nameInput = document.getElementById('name-input');
+        const emailInput = document.getElementById('email-input');
+        const passwordInput = document.getElementById('password-input');
+        const confirmPasswordDiv = document.getElementById('confirm-password-div');
+        const messageContainer = document.getElementById('message-container');
+        const userEmailSpan = document.getElementById('user-email');
+        const userNameSpan = document.getElementById('user-name');
+        const userAvatar = document.getElementById('user-avatar');
+        const avatarUploadInput = document.getElementById('avatar-upload');
+        const avatarUploadSpinner = document.getElementById('avatar-upload-spinner');
+        const logoutButton = document.getElementById('logout-button');
+        const addNoteForm = document.getElementById('add-note-form');
+        const noteTitleInput = document.getElementById('note-title-input');
+        const noteContentInput = document.getElementById('note-content-input');
+        const notesList = document.getElementById('notes-list');
 
-        let app, db, auth;
-        let userId;
+        let isLogin = true;
 
-        // Referências ao DOM
-        const noteTextEl = document.getElementById('note-text');
-        const saveButton = document.getElementById('save-note-button');
-        const notesListEl = document.getElementById('notes-list');
-        const statusMessageEl = document.getElementById('status-message');
-        const noNotesMessageEl = document.getElementById('no-notes-message');
-        const userIdEl = document.getElementById('user-id');
+        // Função para mostrar mensagem de status
+        function showMessage(message, isError = false) {
+            messageContainer.textContent = message;
+            if (isError) {
+                messageContainer.className = 'w-full text-center text-sm font-medium mb-4 text-red-500';
+            } else {
+                messageContainer.className = 'w-full text-center text-sm font-medium mb-4 text-green-500';
+            }
+        }
 
-        let currentEditingNoteId = null;
+        // Função para alternar entre login e cadastro
+        toggleAuthLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            isLogin = !isLogin;
+            if (isLogin) {
+                authTitle.textContent = 'Faça login';
+                authButton.textContent = 'Login';
+                nameInputDiv.classList.add('hidden');
+                confirmPasswordDiv.classList.add('hidden');
+                toggleAuthLink.textContent = 'Cadastre-se';
+                showMessage('');
+            } else {
+                authTitle.textContent = 'Crie sua conta';
+                authButton.textContent = 'Cadastrar';
+                nameInputDiv.classList.remove('hidden');
+                confirmPasswordDiv.classList.remove('hidden');
+                toggleAuthLink.textContent = 'Faça login';
+                showMessage('');
+            }
+        });
 
-        /**
-         * Inicializa o Firebase e a autenticação do usuário.
-         * Garante que o ambiente esteja pronto antes de interagir com o Firestore.
-         */
-        async function initializeFirebase() {
+        // Lógica de autenticação (login e cadastro)
+        authForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = emailInput.value;
+            const password = passwordInput.value;
+
             try {
-                // Inicializa o aplicativo Firebase
-                if (Object.keys(firebaseConfig).length > 0) {
-                    app = initializeApp(firebaseConfig);
-                    db = getFirestore(app);
-                    auth = getAuth(app);
-                    console.log("Firebase inicializado.");
+                if (isLogin) {
+                    // Lógica de login
+                    const { error } = await supabase.auth.signInWithPassword({ email, password });
+                    if (error) throw error;
+                    showMessage('Login realizado com sucesso!');
                 } else {
-                    statusMessageEl.textContent = "Aviso: Configuração do Firebase não encontrada. O salvamento online está desativado.";
-                    saveButton.disabled = true;
-                    return;
+                    // Lógica de cadastro
+                    const name = nameInput.value;
+                    const confirmPassword = document.getElementById('confirm-password-input').value;
+                    if (password !== confirmPassword) {
+                        throw new Error('As senhas não coincidem!');
+                    }
+                    const { error } = await supabase.auth.signUp({
+                        email,
+                        password,
+                        options: {
+                            data: { full_name: name }
+                        }
+                    });
+                    if (error) throw error;
+                    showMessage('Cadastro realizado com sucesso! Verifique seu e-mail para confirmar.');
                 }
+            } catch (error) {
+                showMessage(error.message, true);
+            }
+        });
 
-                // Autentica o usuário anonimamente
-                await signInAnonymously(auth);
+        // Lógica de logout
+        logoutButton.addEventListener('click', async () => {
+            try {
+                const { error } = await supabase.auth.signOut();
+                if (error) throw error;
+                showMessage('Você saiu da sua conta.');
+            } catch (error) {
+                showMessage(error.message, true);
+            }
+        });
 
-                // Obtém o ID do usuário após a autenticação
-                userId = auth.currentUser?.uid || crypto.randomUUID();
-                userIdEl.textContent = userId;
-                console.log("Usuário autenticado. ID:", userId);
+        // Lógica para adicionar uma nova nota
+        addNoteForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const title = noteTitleInput.value;
+            const content = noteContentInput.value;
+            const user = (await supabase.auth.getUser()).data.user;
+            if (!user) {
+                showMessage('Você precisa estar logado para adicionar notas.', true);
+                return;
+            }
 
-                // Configura o listener para as notas
-                setupNotesListener();
+            try {
+                const { error } = await supabase.from('notes').insert([{ title, content, user_id: user.id }]);
+                if (error) throw error;
+                // Força o recarregamento completo da página
+                window.location.reload();
+            } catch (error) {
+                showMessage('Erro ao adicionar nota: ' + error.message, true);
+            }
+        });
+
+        // Lógica para renderizar as notas
+        function renderNotes(notes) {
+            notesList.innerHTML = '';
+            if (notes.length === 0) {
+                notesList.innerHTML = `<p class="col-span-3 text-center text-gray-500">Nenhuma nota encontrada. Crie uma nova!</p>`;
+                return;
+            }
+            notes.forEach(note => {
+                const noteCard = document.createElement('div');
+                noteCard.className = 'bg-sky-50 border border-sky-200 p-6 rounded-2xl shadow-md transform hover:scale-105 transition-transform duration-200 cursor-pointer flex flex-col justify-between';
+                noteCard.dataset.id = note.id;
+                noteCard.innerHTML = `
+                    <div>
+                        <h3 class="font-bold text-lg text-gray-800 mb-2">${note.title}</h3>
+                        <p class="text-sm text-gray-600">${note.content}</p>
+                    </div>
+                    <div class="flex justify-end mt-4 space-x-2">
+                        <button class="delete-note text-red-500 hover:text-red-700 transition-colors transform hover:scale-110" data-id="${note.id}">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" />
+                            </svg>
+                        </button>
+                    </div>
+                `;
+                notesList.appendChild(noteCard);
+            });
+        }
+
+        // Lógica para excluir uma nota
+        notesList.addEventListener('click', async (e) => {
+            if (e.target.closest('.delete-note')) {
+                const noteId = e.target.closest('.delete-note').dataset.id;
+                try {
+                    const { error } = await supabase.from('notes').delete().eq('id', noteId);
+                    if (error) throw error;
+                    // Força o recarregamento completo da página
+                    window.location.reload();
+                } catch (error) {
+                    showMessage('Erro ao excluir nota: ' + error.message, true);
+                }
+            }
+        });
+
+        // Lógica para upload de avatar
+        avatarUploadInput.addEventListener('change', async (e) => {
+            const file = e.target.files[0];
+            if (!file) {
+                return;
+            }
+
+            const user = (await supabase.auth.getUser()).data.user;
+            if (!user) {
+                showMessage('Você precisa estar logado para fazer o upload da foto.', true);
+                return;
+            }
+
+            avatarUploadSpinner.classList.remove('hidden');
+
+            const fileExt = file.name.split('.').pop();
+            const filePath = `${user.id}.${fileExt}`;
+
+            try {
+                // Upload do arquivo para o Supabase Storage
+                const { error: uploadError } = await supabase.storage
+                    .from('avatars')
+                    .upload(filePath, file, {
+                        cacheControl: '3600',
+                        upsert: true
+                    });
+
+                if (uploadError) throw uploadError;
+
+                // Obter a URL pública do arquivo
+                const { data: publicUrlData } = supabase.storage
+                    .from('avatars')
+                    .getPublicUrl(filePath);
+
+                // Atualizar o perfil do usuário com a nova URL
+                const { error: updateError } = await supabase.auth.updateUser({
+                    data: { avatar_url: publicUrlData.publicUrl }
+                });
+
+                if (updateError) throw updateError;
+
+                showMessage('Foto de perfil atualizada com sucesso!');
+                userAvatar.src = publicUrlData.publicUrl;
 
             } catch (error) {
-                console.error("Erro ao inicializar Firebase ou autenticar:", error);
-                statusMessageEl.textContent = `Erro: ${error.message}. O salvamento online está desativado.`;
-                saveButton.disabled = true;
+                showMessage('Erro ao fazer upload da foto: ' + error.message, true);
+            } finally {
+                avatarUploadSpinner.classList.add('hidden');
             }
-        }
+        });
 
-        /**
-         * Configura o listener em tempo real para as notas do usuário.
-         */
-        function setupNotesListener() {
-            if (!db || !userId) {
-                console.error("Database ou ID do usuário não disponível. Não é possível configurar o listener.");
-                return;
-            }
-            
-            const notesCollectionRef = collection(db, 'artifacts', appId, 'users', userId, 'notes');
-
-            onSnapshot(notesCollectionRef, (snapshot) => {
-                const notes = [];
-                snapshot.forEach(doc => {
-                    notes.push({ id: doc.id, ...doc.data() });
-                });
-                
-                notes.sort((a, b) => (b.createdAt?.toMillis() || 0) - (a.createdAt?.toMillis() || 0));
-                
-                renderNotes(notes);
-            }, (error) => {
-                console.error("Erro ao obter notas em tempo real:", error);
-                statusMessageEl.textContent = `Erro ao carregar notas: ${error.message}`;
-            });
-        }
-
-        /**
-         * Renderiza a lista de notas na UI.
-         * @param {Array<Object>} notes - A lista de notas.
-         */
-        function renderNotes(notes) {
-            notesListEl.innerHTML = ''; 
-            
-            if (notes.length === 0) {
-                noNotesMessageEl.style.display = 'block';
-                return;
+        // Monitorar o estado de autenticação do usuário
+        supabase.auth.onAuthStateChange(async (event, session) => {
+            const user = session?.user;
+            if (user) {
+                // Usuário logado
+                authFormContainer.classList.add('hidden');
+                notesAppContainer.classList.remove('hidden');
+                userNameSpan.textContent = user.user_metadata.full_name || 'Usuário';
+                userEmailSpan.textContent = user.email;
+                userAvatar.src = user.user_metadata.avatar_url || 'https://placehold.co/100x100/A0A0A0/ffffff?text=User';
+                showMessage('');
+                fetchNotes();
             } else {
-                noNotesMessageEl.style.display = 'none';
+                // Usuário deslogado
+                authFormContainer.classList.remove('hidden');
+                notesAppContainer.classList.add('hidden');
+                userEmailSpan.textContent = '';
+                userNameSpan.textContent = '';
+                userAvatar.src = 'https://placehold.co/100x100/A0A0A0/ffffff?text=User';
+                notesList.innerHTML = '';
             }
-
-            notes.forEach(note => {
-                const noteItem = document.createElement('div');
-                noteItem.classList.add('bg-gray-700', 'p-4', 'rounded-xl', 'flex', 'flex-col', 'gap-2', 'cursor-pointer', 'hover:bg-gray-700', 'transition-colors');
-                
-                const noteText = document.createElement('p');
-                noteText.classList.add('text-gray-300', 'text-sm', 'whitespace-pre-wrap', 'flex-1');
-                noteText.textContent = note.text;
-                
-                const noteActions = document.createElement('div');
-                noteActions.classList.add('flex', 'justify-end', 'gap-2', 'text-xs', 'text-gray-400', 'mt-2');
-                
-                const deleteButton = document.createElement('button');
-                deleteButton.textContent = 'Deletar';
-                deleteButton.classList.add('font-semibold', 'hover:text-red-400', 'transition-colors');
-                deleteButton.onclick = (event) => {
-                    event.stopPropagation();
-                    deleteNote(note.id);
-                };
-                
-                noteActions.appendChild(deleteButton);
-                noteItem.appendChild(noteText);
-                noteItem.appendChild(noteActions);
-                
-                noteItem.onclick = () => {
-                    noteTextEl.value = note.text;
-                    currentEditingNoteId = note.id;
-                    saveButton.textContent = 'Atualizar Nota';
-                };
-                
-                notesListEl.appendChild(noteItem);
-            });
-        }
-
-        /**
-         * Salva ou atualiza uma nota no Firestore.
-         */
-        async function saveNote() {
-            const noteText = noteTextEl.value.trim();
-            if (!noteText) {
-                statusMessageEl.textContent = "A nota não pode estar vazia.";
-                return;
-            }
-
-            if (!db || !userId) {
-                statusMessageEl.textContent = "Erro: Firestore não está pronto para salvar.";
-                return;
-            }
-
-            statusMessageEl.textContent = "Salvando...";
-
+        });
+        
+        // Função para buscar as notas do usuário
+        async function fetchNotes() {
             try {
-                const notesCollectionRef = collection(db, 'artifacts', appId, 'users', userId, 'notes');
-
-                if (currentEditingNoteId) {
-                    const docRef = doc(notesCollectionRef, currentEditingNoteId);
-                    await setDoc(docRef, { text: noteText, updatedAt: serverTimestamp() }, { merge: true });
-                    statusMessageEl.textContent = "Nota atualizada com sucesso!";
-                } else {
-                    await addDoc(notesCollectionRef, {
-                        text: noteText,
-                        createdAt: serverTimestamp(),
-                        updatedAt: serverTimestamp()
-                    });
-                    statusMessageEl.textContent = "Nota salva com sucesso!";
-                }
-                noteTextEl.value = '';
-                currentEditingNoteId = null;
-                saveButton.textContent = 'Salvar Nota';
-            } catch (e) {
-                console.error("Erro ao salvar a nota: ", e);
-                statusMessageEl.textContent = `Erro ao salvar a nota: ${e.message}`;
+                const user = (await supabase.auth.getUser()).data.user;
+                if (!user) return;
+                const { data: notes, error } = await supabase
+                    .from('notes')
+                    .select('*')
+                    .eq('user_id', user.id)
+                    .order('created_at', { ascending: false });
+                if (error) throw error;
+                renderNotes(notes);
+            } catch (error) {
+                showMessage('Erro ao carregar notas: ' + error.message, true);
             }
         }
-
-        /**
-         * Deleta uma nota do Firestore.
-         * @param {string} noteId - O ID do documento da nota a ser deletada.
-         */
-        async function deleteNote(noteId) {
-            if (!db || !userId) return;
-
-            statusMessageEl.textContent = "Deletando nota...";
-
-            try {
-                const notesCollectionRef = collection(db, 'artifacts', appId, 'users', userId, 'notes');
-                const docRef = doc(notesCollectionRef, noteId);
-                await deleteDoc(docRef);
-                statusMessageEl.textContent = "Nota deletada com sucesso!";
-            } catch (e) {
-                console.error("Erro ao deletar a nota: ", e);
-                statusMessageEl.textContent = `Erro ao deletar a nota: ${e.message}`;
-            }
-        }
-
-        // Adiciona um listener de evento ao botão de salvar
-        saveButton.addEventListener('click', saveNote);
-
-        // Inicializa o aplicativo quando a página é carregada
-        window.addEventListener('load', initializeFirebase);
     </script>
 </body>
 </html>
