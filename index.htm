@@ -481,18 +481,14 @@
             }
         }
         
-        // Variável de controle para o estado de redefinição de senha
-        let isPasswordResetting = false;
-
         // Monitorar o estado de autenticação do usuário
         supabase.auth.onAuthStateChange(async (event, session) => {
             const user = session?.user;
             const urlParams = new URLSearchParams(window.location.hash.substring(1));
             const type = urlParams.get('type');
             
-            // Verifica se a URL é para redefinição de senha
+            // Prioriza a verificação de redefinição de senha
             if (type === 'recovery') {
-                isPasswordResetting = true;
                 authFormContainer.classList.add('hidden');
                 notesAppContainer.classList.add('hidden');
                 passwordResetContainer.classList.remove('hidden');
@@ -507,9 +503,8 @@
                 return;
             }
             
-            // Se a URL não for de redefinição, continua com o fluxo normal
+            // Lógica de exibição normal da interface do usuário
             if (user) {
-                isPasswordResetting = false; // Reseta o estado
                 authFormContainer.classList.add('hidden');
                 passwordResetContainer.classList.add('hidden');
                 notesAppContainer.classList.remove('hidden');
@@ -519,9 +514,6 @@
                 showMessage('');
                 fetchNotes();
             } else {
-                if (isPasswordResetting) {
-                    return;
-                }
                 authFormContainer.classList.remove('hidden');
                 notesAppContainer.classList.add('hidden');
                 passwordResetContainer.classList.add('hidden');
@@ -532,7 +524,6 @@
                 authForm.reset();
             }
         });
-
     </script>
 </body>
 </html>
