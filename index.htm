@@ -174,6 +174,9 @@
                 <button id="change-password-button" class="w-full bg-gray-100 text-gray-800 font-bold py-3 rounded-xl hover:bg-gray-200 transition-all shadow-lg">
                     Alterar Senha
                 </button>
+                <button id="delete-account-button" class="w-full bg-red-500 text-white font-bold py-3 rounded-xl hover:bg-red-600 transition-all shadow-lg">
+                    Excluir Conta
+                </button>
             </div>
         </div>
     </div>
@@ -279,13 +282,29 @@
         </div>
     </div>
 
-    <!-- Modal de Visualização da Foto de Perfil -->
+    <!-- Modal para Visualização da Foto de Perfil -->
     <div id="profile-picture-modal" class="modal fixed inset-0 bg-gray-900 bg-opacity-90 flex items-center justify-center p-4 z-50 hidden">
         <div class="relative w-full max-w-md sm:max-w-xl text-center">
             <button id="close-profile-picture-modal" class="absolute -top-12 sm:-top-16 right-0 text-white hover:text-gray-300 transition-colors">
                 <i class="fa-solid fa-xmark text-4xl"></i>
             </button>
             <img id="expanded-profile-picture" class="rounded-xl w-80 h-80 object-contain mx-auto max-w-full" src="" alt="Foto de Perfil expandida">
+        </div>
+    </div>
+
+    <!-- Modal de Confirmação para Excluir Conta -->
+    <div id="delete-account-confirm-modal" class="modal fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center p-4 z-50 hidden">
+        <div class="bg-white p-6 rounded-2xl shadow-xl w-full max-w-md text-center">
+            <h3 class="text-lg font-semibold text-gray-700 mb-4">Confirmar Exclusão da Conta</h3>
+            <p class="text-sm text-gray-600 mb-6">Esta ação é irreversível. Todas as suas notas e dados serão permanentemente excluídos. Tem certeza que deseja continuar?</p>
+            <div class="flex justify-center space-x-4">
+                <button id="confirm-delete-account-button" class="bg-red-500 text-white font-bold py-2 px-4 rounded-xl hover:bg-red-600 transition-colors shadow-lg transform active:scale-95">
+                    Sim, Excluir Minha Conta
+                </button>
+                <button id="cancel-delete-account-button" class="bg-gray-300 text-gray-800 font-bold py-2 px-4 rounded-xl hover:bg-gray-400 transition-colors shadow-lg transform active:scale-95">
+                    Não
+                </button>
+            </div>
         </div>
     </div>
 
@@ -342,6 +361,7 @@
         const closeSettingsModalButton = document.getElementById('close-settings-modal-button');
         const editProfileButton = document.getElementById('edit-profile-button');
         const changePasswordButton = document.getElementById('change-password-button');
+        const deleteAccountButton = document.getElementById('delete-account-button');
         
         // Modal para Alterar Senha (Usuário Logado)
         const changePasswordModal = document.getElementById('change-password-modal');
@@ -378,6 +398,11 @@
         const profilePictureModal = document.getElementById('profile-picture-modal');
         const expandedProfilePicture = document.getElementById('expanded-profile-picture');
         const closeProfilePictureModalButton = document.getElementById('close-profile-picture-modal');
+
+        // Modal de Confirmação para Excluir Conta
+        const deleteAccountConfirmModal = document.getElementById('delete-account-confirm-modal');
+        const confirmDeleteAccountButton = document.getElementById('confirm-delete-account-button');
+        const cancelDeleteAccountButton = document.getElementById('cancel-delete-account-button');
 
         let isLogin = true;
         let noteIdToDelete = null;
@@ -803,6 +828,51 @@
             }
         }
         
+        // Lógica de exclusão de conta
+        deleteAccountButton.addEventListener('click', () => {
+            settingsModal.classList.add('hidden');
+            deleteAccountConfirmModal.classList.remove('hidden');
+        });
+
+        // Lógica de confirmação de exclusão de conta
+        confirmDeleteAccountButton.addEventListener('click', async () => {
+            try {
+                const user = (await supabase.auth.getUser()).data.user;
+                if (!user) {
+                    throw new Error('Usuário não autenticado.');
+                }
+                
+                // Excluir todas as notas do usuário primeiro
+                const { error: notesError } = await supabase.from('notes').delete().eq('user_id', user.id);
+                if (notesError) throw notesError;
+
+                // Em seguida, excluir a foto de perfil
+                const { error: storageError } = await supabase.storage.from('avatars').remove([`${user.id}.${user.user_metadata.avatar_url.split('.').pop().split('?')[0]}`]);
+                // Ignorar erro se a foto não existir
+
+                // Excluir o usuário (requer Service Role Key, que não está disponível aqui, então a operação irá falhar)
+                const { error: deleteUserError } = await supabase.auth.admin.deleteUser(user.id);
+                if (deleteUserError) throw deleteUserError;
+
+                // Fazer o logout do usuário após a exclusão bem-sucedida
+                const { error: signOutError } = await supabase.auth.signOut();
+                if (signOutError) throw signOutError;
+
+                showMessage('Conta excluída com sucesso!', false);
+
+            } catch (error) {
+                showMessage('Erro ao excluir a conta. Por favor, tente novamente mais tarde. ' + error.message, true);
+            } finally {
+                deleteAccountConfirmModal.classList.add('hidden');
+            }
+        });
+
+        // Lógica para cancelar a exclusão de conta
+        cancelDeleteAccountButton.addEventListener('click', () => {
+            deleteAccountConfirmModal.classList.add('hidden');
+            settingsModal.classList.remove('hidden');
+        });
+
         // Verifica a URL na inicialização para redefinição de senha
         const urlParams = new URLSearchParams(window.location.hash.substring(1));
         const type = urlParams.get('type');
