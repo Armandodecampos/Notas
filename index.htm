@@ -355,10 +355,15 @@
             }
 
             try {
-                const { error } = await supabase.from('notes').insert([{ title, content, user_id: user.id }]);
+                const { data, error } = await supabase.from('notes').insert([{ title, content, user_id: user.id }]).select();
                 if (error) throw error;
-                // Força o recarregamento completo da página
-                window.location.reload();
+                // Adiciona a nota à lista sem recarregar a página
+                const newNote = data[0];
+                const noteCard = createNoteCard(newNote);
+                notesList.prepend(noteCard);
+                noteTitleInput.value = '';
+                noteContentInput.value = '';
+                showMessage('Nota adicionada com sucesso!');
             } catch (error) {
                 showMessage('Erro ao adicionar nota: ' + error.message, true);
             }
@@ -372,24 +377,29 @@
                 return;
             }
             notes.forEach(note => {
-                const noteCard = document.createElement('div');
-                noteCard.className = 'bg-sky-50 border border-sky-200 p-6 rounded-2xl shadow-md transform hover:scale-105 transition-transform duration-200 cursor-pointer flex flex-col justify-between';
-                noteCard.dataset.id = note.id;
-                noteCard.innerHTML = `
-                    <div>
-                        <h3 class="font-bold text-lg text-gray-800 mb-2">${note.title}</h3>
-                        <p class="text-sm text-gray-600">${note.content}</p>
-                    </div>
-                    <div class="flex justify-end mt-4 space-x-2">
-                        <button class="delete-note text-red-500 hover:text-red-700 transition-colors transform hover:scale-110" data-id="${note.id}">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                                <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" />
-                            </svg>
-                        </button>
-                    </div>
-                `;
+                const noteCard = createNoteCard(note);
                 notesList.appendChild(noteCard);
             });
+        }
+
+        function createNoteCard(note) {
+            const noteCard = document.createElement('div');
+            noteCard.className = 'bg-sky-50 border border-sky-200 p-6 rounded-2xl shadow-md transform hover:scale-105 transition-transform duration-200 cursor-pointer flex flex-col justify-between';
+            noteCard.dataset.id = note.id;
+            noteCard.innerHTML = `
+                <div>
+                    <h3 class="font-bold text-lg text-gray-800 mb-2">${note.title}</h3>
+                    <p class="text-sm text-gray-600">${note.content}</p>
+                </div>
+                <div class="flex justify-end mt-4 space-x-2">
+                    <button class="delete-note text-red-500 hover:text-red-700 transition-colors transform hover:scale-110" data-id="${note.id}">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" />
+                        </svg>
+                    </button>
+                </div>
+            `;
+            return noteCard;
         }
 
         // Lógica para excluir uma nota
@@ -399,8 +409,12 @@
                 try {
                     const { error } = await supabase.from('notes').delete().eq('id', noteId);
                     if (error) throw error;
-                    // Força o recarregamento completo da página
-                    window.location.reload();
+                    // Remove o cartão da nota da interface instantaneamente
+                    const noteCardToRemove = notesList.querySelector(`[data-id="${noteId}"]`);
+                    if (noteCardToRemove) {
+                        noteCardToRemove.remove();
+                    }
+                    showMessage('Nota excluída com sucesso!');
                 } catch (error) {
                     showMessage('Erro ao excluir nota: ' + error.message, true);
                 }
@@ -458,6 +472,40 @@
             }
         });
 
+        // --- LÓGICA REVISADA DE AUTENTICAÇÃO E REDIRECIONAMENTO ---
+        supabase.auth.onAuthStateChange((event, session) => {
+            const user = session?.user;
+            if (user) {
+                // Se o evento é de redefinição de senha, mostra o formulário de reset
+                if (event === 'PASSWORD_RESET') {
+                    passwordResetContainer.classList.remove('hidden');
+                    authFormContainer.classList.add('hidden');
+                    notesAppContainer.classList.add('hidden');
+                } else {
+                    // Usuário logado
+                    authFormContainer.classList.add('hidden');
+                    passwordResetContainer.classList.add('hidden');
+                    notesAppContainer.classList.remove('hidden');
+                    userNameSpan.textContent = user.user_metadata.full_name || 'Usuário';
+                    userEmailSpan.textContent = user.email;
+                    userAvatar.src = user.user_metadata.avatar_url || 'https://placehold.co/100x100/A0A0A0/ffffff?text=User';
+                    showMessage('');
+                    fetchNotes();
+                }
+            } else {
+                // Usuário deslogado
+                authFormContainer.classList.remove('hidden');
+                notesAppContainer.classList.add('hidden');
+                passwordResetContainer.classList.add('hidden');
+                userEmailSpan.textContent = '';
+                userNameSpan.textContent = '';
+                userAvatar.src = 'https://placehold.co/100x100/A0A0A0/ffffff?text=User';
+                notesList.innerHTML = '';
+                // Limpa o formulário para evitar que os dados persistam
+                authForm.reset();
+            }
+        });
+
         // Função para buscar as notas do usuário
         async function fetchNotes() {
             try {
@@ -475,48 +523,6 @@
             }
         }
         
-        // --- LÓGICA CORRIGIDA PARA REDEFINIÇÃO DE SENHA NA URL ---
-        function checkPasswordResetUrl() {
-            const urlParams = new URLSearchParams(window.location.hash.substring(1));
-            const type = urlParams.get('type');
-            if (type === 'recovery') {
-                authFormContainer.classList.add('hidden');
-                notesAppContainer.classList.add('hidden');
-                passwordResetContainer.classList.remove('hidden');
-                showMessage('Por favor, defina sua nova senha.', false);
-            }
-        }
-        
-        // Monitorar o estado de autenticação do usuário
-        supabase.auth.onAuthStateChange(async (event, session) => {
-            if (session?.user) {
-                // Usuário logado
-                authFormContainer.classList.add('hidden');
-                passwordResetContainer.classList.add('hidden');
-                notesAppContainer.classList.remove('hidden');
-                const user = session.user;
-                userNameSpan.textContent = user.user_metadata.full_name || 'Usuário';
-                userEmailSpan.textContent = user.email;
-                userAvatar.src = user.user_metadata.avatar_url || 'https://placehold.co/100x100/A0A0A0/ffffff?text=User';
-                showMessage('');
-                fetchNotes();
-            } else {
-                // Usuário deslogado
-                authFormContainer.classList.remove('hidden');
-                notesAppContainer.classList.add('hidden');
-                passwordResetContainer.classList.add('hidden');
-                userEmailSpan.textContent = '';
-                userNameSpan.textContent = '';
-                userAvatar.src = 'https://placehold.co/100x100/A0A0A0/ffffff?text=User';
-                notesList.innerHTML = '';
-                // Limpa o formulário para evitar que os dados persistam
-                authForm.reset();
-            }
-        });
-
-        // Executar a verificação na URL ao carregar a página
-        window.onload = checkPasswordResetUrl;
-
     </script>
 </body>
 </html>
