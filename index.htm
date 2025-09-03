@@ -408,12 +408,18 @@
         let noteIdToDelete = null;
 
         // Função para mostrar mensagem de status
-        function showMessage(message, isError = false, targetContainer = messageContainer) {
+        function showMessage(message, isError = false, duration = 3000, targetContainer = messageContainer) {
             targetContainer.textContent = message;
             if (isError) {
                 targetContainer.className = 'w-full text-center text-sm font-medium mb-4 text-red-500';
             } else {
                 targetContainer.className = 'w-full text-center text-sm font-medium mb-4 text-green-500';
+            }
+            if (duration > 0) {
+                setTimeout(() => {
+                    targetContainer.textContent = '';
+                    targetContainer.className = 'w-full text-center text-sm font-medium mb-4';
+                }, duration);
             }
         }
 
@@ -456,7 +462,7 @@
         sendResetLinkButton.addEventListener('click', async () => {
             const email = forgotPasswordEmailInput.value;
             if (!email) {
-                showMessage('Por favor, insira seu e-mail para redefinir a senha.', true, modalMessageContainer);
+                showMessage('Por favor, insira seu e-mail para redefinir a senha.', true, 0, modalMessageContainer);
                 return;
             }
 
@@ -466,9 +472,9 @@
                 });
                 
                 if (error) throw error;
-                showMessage('Verifique seu e-mail para o link de redefinição de senha.', false, modalMessageContainer);
+                showMessage('Verifique seu e-mail para o link de redefinição de senha.', false, 5000, modalMessageContainer);
             } catch (error) {
-                showMessage('Erro: ' + error.message, true, modalMessageContainer);
+                showMessage('Erro: ' + error.message, true, 0, modalMessageContainer);
             }
         });
 
@@ -482,7 +488,7 @@
                 if (isLogin) {
                     const { error } = await supabase.auth.signInWithPassword({ email, password });
                     if (error) throw error;
-                    showMessage('Login realizado com sucesso!');
+                    showMessage('Login realizado com sucesso!', false, 3000);
                 } else {
                     const name = nameInput.value;
                     const confirmPassword = document.getElementById('confirm-password-input').value;
@@ -497,10 +503,10 @@
                         }
                     });
                     if (error) throw error;
-                    showMessage('Cadastro realizado com sucesso! Verifique seu e-mail para confirmar.');
+                    showMessage('Cadastro realizado com sucesso! Verifique seu e-mail para confirmar.', false, 5000);
                 }
             } catch (error) {
-                showMessage(error.message, true);
+                showMessage(error.message, true, 0);
             }
         });
 
@@ -509,9 +515,9 @@
             try {
                 const { error } = await supabase.auth.signOut();
                 if (error) throw error;
-                showMessage('Você saiu da sua conta.');
+                showMessage('Você saiu da sua conta.', false, 3000);
             } catch (error) {
-                showMessage(error.message, true);
+                showMessage(error.message, true, 0);
             }
         });
         
@@ -522,14 +528,14 @@
             const confirmNewPassword = confirmNewPasswordInput.value;
             
             if (newPassword !== confirmNewPassword) {
-                showMessage('As novas senhas não coincidem!', true);
+                showMessage('As novas senhas não coincidem!', true, 0);
                 return;
             }
 
             try {
                 const { error } = await supabase.auth.updateUser({ password: newPassword });
                 if (error) throw error;
-                showMessage('Senha alterada com sucesso! Você já pode fazer login.');
+                showMessage('Senha alterada com sucesso! Você já pode fazer login.', false, 3000);
                 
                 newPasswordInput.value = '';
                 confirmNewPasswordInput.value = '';
@@ -542,7 +548,7 @@
 
                 window.history.pushState({}, document.title, window.location.pathname);
             } catch (error) {
-                showMessage('Erro ao alterar a senha: ' + error.message, true);
+                showMessage('Erro ao alterar a senha: ' + error.message, true, 0);
             }
         });
 
@@ -582,17 +588,17 @@
             const confirmNewPassword = changeConfirmPasswordInput.value;
 
             if (newPassword !== confirmNewPassword) {
-                showMessage('As novas senhas não coincidem!', true, changePasswordMessage);
+                showMessage('As novas senhas não coincidem!', true, 0, changePasswordMessage);
                 return;
             }
 
             try {
                 const { error } = await supabase.auth.updateUser({ password: newPassword });
                 if (error) throw error;
-                showMessage('Senha alterada com sucesso!', false, changePasswordMessage);
+                showMessage('Senha alterada com sucesso!', false, 3000, changePasswordMessage);
                 changePasswordForm.reset();
             } catch (error) {
-                showMessage('Erro ao alterar a senha: ' + error.message, true, changePasswordMessage);
+                showMessage('Erro ao alterar a senha: ' + error.message, true, 0, changePasswordMessage);
             }
         });
 
@@ -627,11 +633,11 @@
             try {
                 const { error } = await supabase.auth.updateUser({ data: { full_name: newName } });
                 if (error) throw error;
-                showMessage('Perfil atualizado com sucesso!', false, editProfileMessage);
+                showMessage('Perfil atualizado com sucesso!', false, 3000, editProfileMessage);
                 // Atualiza o nome na tela instantaneamente
                 userNameSpan.textContent = newName;
             } catch (error) {
-                showMessage('Erro ao atualizar perfil: ' + error.message, true, editProfileMessage);
+                showMessage('Erro ao atualizar perfil: ' + error.message, true, 0, editProfileMessage);
             }
         });
 
@@ -643,7 +649,7 @@
             const content = noteContentInput.value;
             const user = (await supabase.auth.getUser()).data.user;
             if (!user) {
-                showMessage('Você precisa estar logado para adicionar notas.', true);
+                showMessage('Você precisa estar logado para adicionar notas.', true, 0);
                 return;
             }
 
@@ -655,9 +661,9 @@
                 notesList.prepend(noteCard);
                 noteTitleInput.value = '';
                 noteContentInput.value = '';
-                showMessage('Nota adicionada com sucesso!');
+                showMessage('Nota adicionada com sucesso!', false, 3000);
             } catch (error) {
-                showMessage('Erro ao adicionar nota: ' + error.message, true);
+                showMessage('Erro ao adicionar nota: ' + error.message, true, 0);
             }
         });
 
@@ -733,9 +739,9 @@
                     if (noteCardToRemove) {
                         noteCardToRemove.remove();
                     }
-                    showMessage('Nota excluída com sucesso!');
+                    showMessage('Nota excluída com sucesso!', false, 3000);
                 } catch (error) {
-                    showMessage('Erro ao excluir nota: ' + error.message, true);
+                    showMessage('Erro ao excluir nota: ' + error.message, true, 0);
                 } finally {
                     deleteNoteConfirmModal.classList.add('hidden');
                     noteIdToDelete = null;
@@ -758,7 +764,7 @@
 
             const user = (await supabase.auth.getUser()).data.user;
             if (!user) {
-                showMessage('Você precisa estar logado para fazer o upload da foto.', true, editProfileMessage);
+                showMessage('Você precisa estar logado para fazer o upload da foto.', true, 0, editProfileMessage);
                 return;
             }
 
@@ -788,12 +794,12 @@
 
                 if (updateError) throw updateError;
 
-                showMessage('Foto de perfil atualizada com sucesso!', false, editProfileMessage);
+                showMessage('Foto de perfil atualizada com sucesso!', false, 3000, editProfileMessage);
                 userAvatar.src = publicUrl;
                 editUserAvatar.src = publicUrl;
 
             } catch (error) {
-                showMessage('Erro ao fazer upload da foto: ' + error.message, true, editProfileMessage);
+                showMessage('Erro ao fazer upload da foto: ' + error.message, true, 0, editProfileMessage);
             } finally {
                 avatarUploadSpinner.classList.add('hidden');
             }
@@ -824,7 +830,7 @@
                 if (error) throw error;
                 renderNotes(notes);
             } catch (error) {
-                showMessage('Erro ao carregar notas: ' + error.message, true);
+                showMessage('Erro ao carregar notas: ' + error.message, true, 0);
             }
         }
         
@@ -858,10 +864,10 @@
                 const { error: signOutError } = await supabase.auth.signOut();
                 if (signOutError) throw signOutError;
 
-                showMessage('Conta excluída com sucesso!', false);
+                showMessage('Conta excluída com sucesso!', false, 3000);
 
             } catch (error) {
-                showMessage('Erro ao excluir a conta. Por favor, tente novamente mais tarde. ' + error.message, true);
+                showMessage('Erro ao excluir a conta. Por favor, tente novamente mais tarde. ' + error.message, true, 0);
             } finally {
                 deleteAccountConfirmModal.classList.add('hidden');
             }
@@ -904,7 +910,7 @@
                 userNameSpan.textContent = user.user_metadata.full_name || 'Usuário';
                 userEmailSpan.textContent = user.email;
                 userAvatar.src = user.user_metadata.avatar_url || 'https://placehold.co/100x100/A0A0A0/ffffff?text=User';
-                showMessage('');
+                showMessage('', false, 0);
                 fetchNotes();
             } else {
                 authFormContainer.classList.remove('hidden');
