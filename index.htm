@@ -253,9 +253,8 @@
             }
 
             try {
-                // A URL para a qual o usuário será redirecionado após o clique no link do e-mail
                 const { error } = await supabase.auth.resetPasswordForEmail(email, {
-                    redirectTo: window.location.href // Use a URL atual para a redefinição funcionar
+                    redirectTo: window.location.href
                 });
                 
                 if (error) throw error;
@@ -273,12 +272,10 @@
 
             try {
                 if (isLogin) {
-                    // Lógica de login
                     const { error } = await supabase.auth.signInWithPassword({ email, password });
                     if (error) throw error;
                     showMessage('Login realizado com sucesso!');
                 } else {
-                    // Lógica de cadastro
                     const name = nameInput.value;
                     const confirmPassword = document.getElementById('confirm-password-input').value;
                     if (password !== confirmPassword) {
@@ -326,7 +323,6 @@
                 if (error) throw error;
                 showMessage('Senha alterada com sucesso! Você já pode fazer login.');
                 
-                // Limpar os campos e forçar a exibição do formulário de login
                 newPasswordInput.value = '';
                 confirmNewPasswordInput.value = '';
                 passwordResetContainer.classList.add('hidden');
@@ -336,7 +332,6 @@
                 authTitle.textContent = 'Faça login';
                 authButton.textContent = 'Login';
 
-                // Limpar os parâmetros da URL após o reset
                 window.history.pushState({}, document.title, window.location.pathname);
             } catch (error) {
                 showMessage('Erro ao alterar a senha: ' + error.message, true);
@@ -357,7 +352,6 @@
             try {
                 const { data, error } = await supabase.from('notes').insert([{ title, content, user_id: user.id }]).select();
                 if (error) throw error;
-                // Adiciona a nota à lista sem recarregar a página
                 const newNote = data[0];
                 const noteCard = createNoteCard(newNote);
                 notesList.prepend(noteCard);
@@ -409,7 +403,6 @@
                 try {
                     const { error } = await supabase.from('notes').delete().eq('id', noteId);
                     if (error) throw error;
-                    // Remove o cartão da nota da interface instantaneamente
                     const noteCardToRemove = notesList.querySelector(`[data-id="${noteId}"]`);
                     if (noteCardToRemove) {
                         noteCardToRemove.remove();
@@ -440,7 +433,6 @@
             const filePath = `${user.id}.${fileExt}`;
 
             try {
-                // Upload do arquivo para o Supabase Storage
                 const { error: uploadError } = await supabase.storage
                     .from('avatars')
                     .upload(filePath, file, {
@@ -450,12 +442,10 @@
 
                 if (uploadError) throw uploadError;
 
-                // Obter a URL pública do arquivo
                 const { data: publicUrlData } = supabase.storage
                     .from('avatars')
                     .getPublicUrl(filePath);
 
-                // Atualizar o perfil do usuário com a nova URL
                 const { error: updateError } = await supabase.auth.updateUser({
                     data: { avatar_url: publicUrlData.publicUrl }
                 });
@@ -472,41 +462,7 @@
             }
         });
 
-        // --- LÓGICA REVISADA DE AUTENTICAÇÃO E REDIRECIONAMENTO ---
-        supabase.auth.onAuthStateChange((event, session) => {
-            const user = session?.user;
-            if (user) {
-                // Se o evento é de redefinição de senha, mostra o formulário de reset
-                if (event === 'PASSWORD_RESET') {
-                    passwordResetContainer.classList.remove('hidden');
-                    authFormContainer.classList.add('hidden');
-                    notesAppContainer.classList.add('hidden');
-                } else {
-                    // Usuário logado
-                    authFormContainer.classList.add('hidden');
-                    passwordResetContainer.classList.add('hidden');
-                    notesAppContainer.classList.remove('hidden');
-                    userNameSpan.textContent = user.user_metadata.full_name || 'Usuário';
-                    userEmailSpan.textContent = user.email;
-                    userAvatar.src = user.user_metadata.avatar_url || 'https://placehold.co/100x100/A0A0A0/ffffff?text=User';
-                    showMessage('');
-                    fetchNotes();
-                }
-            } else {
-                // Usuário deslogado
-                authFormContainer.classList.remove('hidden');
-                notesAppContainer.classList.add('hidden');
-                passwordResetContainer.classList.add('hidden');
-                userEmailSpan.textContent = '';
-                userNameSpan.textContent = '';
-                userAvatar.src = 'https://placehold.co/100x100/A0A0A0/ffffff?text=User';
-                notesList.innerHTML = '';
-                // Limpa o formulário para evitar que os dados persistam
-                authForm.reset();
-            }
-        });
-
-        // Função para buscar as notas do usuário
+        // Lógica para buscar as notas do usuário
         async function fetchNotes() {
             try {
                 const user = (await supabase.auth.getUser()).data.user;
@@ -523,6 +479,35 @@
             }
         }
         
+        // Monitorar o estado de autenticação do usuário
+        supabase.auth.onAuthStateChange(async (event, session) => {
+            const user = session?.user;
+
+            if (event === 'PASSWORD_RESET') {
+                passwordResetContainer.classList.remove('hidden');
+                authFormContainer.classList.add('hidden');
+                notesAppContainer.classList.add('hidden');
+                showMessage('Por favor, defina sua nova senha.');
+            } else if (user) {
+                authFormContainer.classList.add('hidden');
+                passwordResetContainer.classList.add('hidden');
+                notesAppContainer.classList.remove('hidden');
+                userNameSpan.textContent = user.user_metadata.full_name || 'Usuário';
+                userEmailSpan.textContent = user.email;
+                userAvatar.src = user.user_metadata.avatar_url || 'https://placehold.co/100x100/A0A0A0/ffffff?text=User';
+                showMessage('');
+                fetchNotes();
+            } else {
+                authFormContainer.classList.remove('hidden');
+                notesAppContainer.classList.add('hidden');
+                passwordResetContainer.classList.add('hidden');
+                userEmailSpan.textContent = '';
+                userNameSpan.textContent = '';
+                userAvatar.src = 'https://placehold.co/100x100/A0A0A0/ffffff?text=User';
+                notesList.innerHTML = '';
+                authForm.reset();
+            }
+        });
     </script>
 </body>
 </html>
