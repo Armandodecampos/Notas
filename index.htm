@@ -479,16 +479,23 @@
             }
         }
         
-        // Monitorar o estado de autenticação do usuário
-        supabase.auth.onAuthStateChange(async (event, session) => {
-            const user = session?.user;
-
-            if (event === 'PASSWORD_RESET') {
+        // --- LÓGICA CORRIGIDA PARA REDEFINIÇÃO DE SENHA NA URL ---
+        function checkUrlForPasswordReset() {
+            const urlParams = new URLSearchParams(window.location.hash.substring(1));
+            const type = urlParams.get('type');
+            if (type === 'recovery') {
                 passwordResetContainer.classList.remove('hidden');
                 authFormContainer.classList.add('hidden');
                 notesAppContainer.classList.add('hidden');
                 showMessage('Por favor, defina sua nova senha.');
-            } else if (user) {
+            }
+        }
+        
+        // Monitorar o estado de autenticação do usuário
+        supabase.auth.onAuthStateChange(async (event, session) => {
+            const user = session?.user;
+
+            if (user) {
                 authFormContainer.classList.add('hidden');
                 passwordResetContainer.classList.add('hidden');
                 notesAppContainer.classList.remove('hidden');
@@ -508,6 +515,10 @@
                 authForm.reset();
             }
         });
+
+        // Executar a verificação da URL ao carregar a página
+        window.addEventListener('load', checkUrlForPasswordReset);
+
     </script>
 </body>
 </html>
