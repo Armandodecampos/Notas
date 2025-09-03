@@ -114,7 +114,7 @@
         <!-- Formulário para Redefinir Senha -->
         <div id="password-reset-container" class="hidden w-full transition-opacity duration-300">
             <h2 class="text-xl font-semibold text-gray-700 text-center mb-6">Redefinir Senha</h2>
-            <p class="text-center text-sm text-gray-500 mb-4">
+            <p id="password-reset-message" class="text-center text-sm text-gray-500 mb-4">
                 Por favor, insira e confirme sua nova senha.
             </p>
             <form id="password-reset-form" class="space-y-4">
@@ -196,6 +196,8 @@
         const passwordResetForm = document.getElementById('password-reset-form');
         const newPasswordInput = document.getElementById('new-password-input');
         const confirmNewPasswordInput = document.getElementById('confirm-new-password-input');
+        const passwordResetMessage = document.getElementById('password-reset-message');
+        const resetPasswordButton = document.getElementById('reset-password-button');
         
         let isLogin = true;
 
@@ -487,7 +489,16 @@
                 passwordResetContainer.classList.remove('hidden');
                 authFormContainer.classList.add('hidden');
                 notesAppContainer.classList.add('hidden');
-                showMessage('Por favor, defina sua nova senha.');
+                passwordResetMessage.textContent = 'Carregando... Por favor, aguarde.';
+                resetPasswordButton.disabled = true;
+                
+                // Monitora o evento de redefinição para habilitar o botão
+                supabase.auth.onAuthStateChange(async (event, session) => {
+                    if (event === 'PASSWORD_RESET') {
+                        passwordResetMessage.textContent = 'Sessão verificada. Por favor, insira sua nova senha.';
+                        resetPasswordButton.disabled = false;
+                    }
+                });
             }
         }
         
@@ -495,6 +506,7 @@
         supabase.auth.onAuthStateChange(async (event, session) => {
             const user = session?.user;
 
+            // Esta é a verificação principal para o estado de login
             if (user) {
                 authFormContainer.classList.add('hidden');
                 passwordResetContainer.classList.add('hidden');
