@@ -483,7 +483,6 @@
         
         // Monitorar o estado de autenticação do usuário
         supabase.auth.onAuthStateChange(async (event, session) => {
-            const user = session?.user;
             const urlParams = new URLSearchParams(window.location.hash.substring(1));
             const type = urlParams.get('type');
             
@@ -492,10 +491,11 @@
                 authFormContainer.classList.add('hidden');
                 notesAppContainer.classList.add('hidden');
                 passwordResetContainer.classList.remove('hidden');
+                
+                // Espera a sessão ser validada pela Supabase
                 passwordResetMessage.textContent = 'Carregando... Por favor, aguarde.';
                 resetPasswordButton.disabled = true;
 
-                // Espera a sessão ser validada pela Supabase
                 if (event === 'PASSWORD_RESET') {
                     passwordResetMessage.textContent = 'Sessão verificada. Por favor, insira sua nova senha.';
                     resetPasswordButton.disabled = false;
@@ -504,6 +504,7 @@
             }
             
             // Lógica de exibição normal da interface do usuário
+            const user = session?.user;
             if (user) {
                 authFormContainer.classList.add('hidden');
                 passwordResetContainer.classList.add('hidden');
@@ -524,6 +525,7 @@
                 authForm.reset();
             }
         });
+
     </script>
 </body>
 </html>
