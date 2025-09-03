@@ -19,6 +19,13 @@
             from { transform: rotate(0deg); }
             to { transform: rotate(360deg); }
         }
+        .modal {
+            transition: opacity 0.3s ease-in-out, visibility 0.3s ease-in-out;
+        }
+        .modal.hidden {
+            opacity: 0;
+            visibility: hidden;
+        }
     </style>
 </head>
 <body class="bg-gray-100 min-h-screen flex items-center justify-center p-4 sm:p-6 lg:p-8">
@@ -57,6 +64,9 @@
             <p class="text-center text-sm text-gray-500 mt-4">
                 Não tem uma conta? 
                 <a href="#" id="toggle-auth-link" class="text-sky-500 hover:text-sky-600 font-medium">Cadastre-se</a>
+            </p>
+            <p id="forgot-password-link" class="text-center text-sm text-gray-500 mt-2 hover:text-sky-500 cursor-pointer transition-colors duration-200">
+                Esqueceu sua senha?
             </p>
         </div>
 
@@ -103,6 +113,26 @@
 
     </div>
 
+    <!-- Modal para Recuperação de Senha -->
+    <div id="forgot-password-modal" class="modal fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center p-4 z-50 hidden">
+        <div class="bg-white p-6 rounded-2xl shadow-xl w-full max-w-md relative">
+            <button id="close-modal-button" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+            <h3 class="text-xl font-semibold text-gray-700 text-center mb-6">Recuperar Senha</h3>
+            <div id="modal-message-container" class="w-full text-center text-sm font-medium mb-4"></div>
+            <p class="text-sm text-gray-500 mb-4 text-center">
+                Insira seu e-mail para receber um link de redefinição de senha.
+            </p>
+            <input id="forgot-password-email-input" type="email" placeholder="Seu e-mail" required class="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-sky-500 focus:outline-none transition-all">
+            <button id="send-reset-link-button" class="w-full bg-sky-500 text-white font-bold py-3 rounded-xl hover:bg-sky-600 transition-all shadow-lg transform active:scale-95 mt-4">
+                Enviar Link
+            </button>
+        </div>
+    </div>
+
     <script>
         // Supabase URL e API Key fornecidos pelo usuário
         const supabaseUrl = 'https://dnrvxzcdzvdexawijfcm.supabase.co';
@@ -118,6 +148,7 @@
         const authTitle = document.getElementById('auth-title');
         const authButton = document.getElementById('auth-button');
         const toggleAuthLink = document.getElementById('toggle-auth-link');
+        const forgotPasswordLink = document.getElementById('forgot-password-link');
         const nameInputDiv = document.getElementById('name-input-div');
         const nameInput = document.getElementById('name-input');
         const emailInput = document.getElementById('email-input');
@@ -135,15 +166,22 @@
         const noteContentInput = document.getElementById('note-content-input');
         const notesList = document.getElementById('notes-list');
 
+        // Modal de recuperação de senha
+        const forgotPasswordModal = document.getElementById('forgot-password-modal');
+        const closePasswordModalButton = document.getElementById('close-modal-button');
+        const forgotPasswordEmailInput = document.getElementById('forgot-password-email-input');
+        const sendResetLinkButton = document.getElementById('send-reset-link-button');
+        const modalMessageContainer = document.getElementById('modal-message-container');
+
         let isLogin = true;
 
         // Função para mostrar mensagem de status
-        function showMessage(message, isError = false) {
-            messageContainer.textContent = message;
+        function showMessage(message, isError = false, targetContainer = messageContainer) {
+            targetContainer.textContent = message;
             if (isError) {
-                messageContainer.className = 'w-full text-center text-sm font-medium mb-4 text-red-500';
+                targetContainer.className = 'w-full text-center text-sm font-medium mb-4 text-red-500';
             } else {
-                messageContainer.className = 'w-full text-center text-sm font-medium mb-4 text-green-500';
+                targetContainer.className = 'w-full text-center text-sm font-medium mb-4 text-green-500';
             }
         }
 
@@ -157,6 +195,7 @@
                 nameInputDiv.classList.add('hidden');
                 confirmPasswordDiv.classList.add('hidden');
                 toggleAuthLink.textContent = 'Cadastre-se';
+                forgotPasswordLink.classList.remove('hidden');
                 showMessage('');
             } else {
                 authTitle.textContent = 'Crie sua conta';
@@ -164,7 +203,42 @@
                 nameInputDiv.classList.remove('hidden');
                 confirmPasswordDiv.classList.remove('hidden');
                 toggleAuthLink.textContent = 'Faça login';
+                forgotPasswordLink.classList.add('hidden');
                 showMessage('');
+            }
+        });
+        
+        // Lógica para abrir o modal de recuperação de senha
+        forgotPasswordLink.addEventListener('click', () => {
+            forgotPasswordModal.classList.remove('hidden');
+        });
+
+        // Lógica para fechar o modal
+        closePasswordModalButton.addEventListener('click', () => {
+            forgotPasswordModal.classList.add('hidden');
+            modalMessageContainer.textContent = '';
+            forgotPasswordEmailInput.value = '';
+        });
+
+        // Lógica de recuperação de senha via modal
+        sendResetLinkButton.addEventListener('click', async () => {
+            const email = forgotPasswordEmailInput.value;
+            if (!email) {
+                showMessage('Por favor, insira seu e-mail para redefinir a senha.', true, modalMessageContainer);
+                return;
+            }
+
+            try {
+                // A URL para a qual o usuário será redirecionado após o clique no link do e-mail
+                // Substitua 'YOUR_REDIRECT_URL_HERE' pela URL do seu site, por exemplo: 'http://localhost:5500'
+                const { error } = await supabase.auth.resetPasswordForEmail(email, {
+                    redirectTo: 'YOUR_REDIRECT_URL_HERE'
+                });
+                
+                if (error) throw error;
+                showMessage('Verifique seu e-mail para o link de redefinição de senha.', false, modalMessageContainer);
+            } catch (error) {
+                showMessage('Erro: ' + error.message, true, modalMessageContainer);
             }
         });
 
