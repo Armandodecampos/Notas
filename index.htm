@@ -27,6 +27,16 @@
             opacity: 0;
             visibility: hidden;
         }
+        .note-content-preview {
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            word-break: break-all;
+        }
+        .note-card {
+            aspect-ratio: 1 / 1;
+        }
     </style>
 </head>
 <body class="bg-gray-100 min-h-screen flex items-center justify-center p-4 sm:p-6 lg:p-8">
@@ -226,6 +236,21 @@
         </div>
     </div>
 
+    <!-- Modal para Visualizar Nota Completa -->
+    <div id="view-note-modal" class="modal fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center p-4 z-50 hidden">
+        <div class="bg-white p-6 rounded-2xl shadow-xl w-full max-w-4xl max-h-[90vh] relative flex flex-col">
+            <button id="close-note-modal" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+            <div class="h-full flex flex-col pt-8 overflow-y-auto">
+                <h3 id="view-note-title" class="text-xl font-bold text-gray-800 mb-4 text-center break-all"></h3>
+                <p id="view-note-content" class="text-sm text-gray-600 whitespace-pre-wrap break-all"></p>
+            </div>
+        </div>
+    </div>
+
     <script>
         // Supabase URL e API Key fornecidos pelo usuário
         const supabaseUrl = 'https://dnrvxzcdzvdexawijfcm.supabase.co';
@@ -297,6 +322,12 @@
         const editNameInput = document.getElementById('edit-name-input');
         const editProfileMessage = document.getElementById('edit-profile-message');
         const backToSettingsFromEditProfile = document.getElementById('back-to-settings-from-edit-profile');
+
+        // Modal de visualização de nota
+        const viewNoteModal = document.getElementById('view-note-modal');
+        const closeNoteModalButton = document.getElementById('close-note-modal');
+        const viewNoteTitle = document.getElementById('view-note-title');
+        const viewNoteContent = document.getElementById('view-note-content');
 
 
         let isLogin = true;
@@ -569,12 +600,14 @@
 
         function createNoteCard(note) {
             const noteCard = document.createElement('div');
-            noteCard.className = 'bg-sky-50 border border-sky-200 p-6 rounded-2xl shadow-md transform hover:scale-105 transition-transform duration-200 cursor-pointer flex flex-col justify-between';
+            noteCard.className = 'bg-sky-50 border border-sky-200 p-6 rounded-2xl shadow-md transform hover:scale-105 transition-transform duration-200 cursor-pointer flex flex-col justify-between note-card';
             noteCard.dataset.id = note.id;
+            noteCard.dataset.title = note.title;
+            noteCard.dataset.content = note.content;
             noteCard.innerHTML = `
                 <div>
-                    <h3 class="font-bold text-lg text-gray-800 mb-2">${note.title}</h3>
-                    <p class="text-sm text-gray-600 break-all">${note.content}</p>
+                    <h3 class="font-bold text-lg text-gray-800 mb-2 truncate">${note.title}</h3>
+                    <p class="text-sm text-gray-600 note-content-preview">${note.content}</p>
                 </div>
                 <div class="flex justify-end mt-4 space-x-2">
                     <button class="delete-note text-red-500 hover:text-red-700 transition-colors transform hover:scale-110" data-id="${note.id}">
@@ -584,6 +617,26 @@
             `;
             return noteCard;
         }
+
+        // Lógica para visualizar nota
+        notesList.addEventListener('click', (e) => {
+            const noteCard = e.target.closest('.note-card');
+            const isDeleteButton = e.target.closest('.delete-note');
+
+            if (noteCard && !isDeleteButton) {
+                const title = noteCard.dataset.title;
+                const content = noteCard.dataset.content;
+
+                viewNoteTitle.textContent = title;
+                viewNoteContent.textContent = content;
+                viewNoteModal.classList.remove('hidden');
+            }
+        });
+
+        // Lógica para fechar a visualização da nota
+        closeNoteModalButton.addEventListener('click', () => {
+            viewNoteModal.classList.add('hidden');
+        });
 
         // Lógica para excluir uma nota
         notesList.addEventListener('click', async (e) => {
