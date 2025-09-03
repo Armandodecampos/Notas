@@ -6,6 +6,7 @@
     <title>Minhas Notas</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
         body {
@@ -89,11 +90,14 @@
                         <span id="user-email" class="font-medium text-gray-600 truncate text-sm max-w-xs"></span>
                     </div>
                 </div>
-                <button id="logout-button" class="text-gray-400 hover:text-gray-600 transform hover:scale-110 transition-transform">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                    </svg>
-                </button>
+                <div class="flex items-center space-x-2">
+                    <button id="settings-button" class="text-gray-400 hover:text-gray-600 transform hover:scale-110 transition-transform">
+                        <i class="fa-solid fa-gear h-6 w-6"></i>
+                    </button>
+                    <button id="logout-button" class="text-gray-400 hover:text-gray-600 transform hover:scale-110 transition-transform">
+                        <i class="fa-solid fa-right-from-bracket h-6 w-6"></i>
+                    </button>
+                </div>
             </div>
 
             <!-- Formulário para Adicionar Notas -->
@@ -151,6 +155,77 @@
         </div>
     </div>
 
+    <!-- Modal de Configurações -->
+    <div id="settings-modal" class="modal fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center p-4 z-50 hidden">
+        <div class="bg-white p-6 rounded-2xl shadow-xl w-full max-w-md relative">
+            <button id="close-settings-modal-button" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+            <h3 class="text-xl font-semibold text-gray-700 text-center mb-6">Configurações</h3>
+            <div class="flex flex-col space-y-4">
+                <button id="edit-profile-button" class="w-full bg-gray-100 text-gray-800 font-bold py-3 rounded-xl hover:bg-gray-200 transition-all shadow-lg">
+                    Editar Perfil
+                </button>
+                <button id="change-password-button" class="w-full bg-gray-100 text-gray-800 font-bold py-3 rounded-xl hover:bg-gray-200 transition-all shadow-lg">
+                    Alterar Senha
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para Alterar Senha (Usuário Logado) -->
+    <div id="change-password-modal" class="modal fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center p-4 z-50 hidden">
+        <div class="bg-white p-6 rounded-2xl shadow-xl w-full max-w-md relative">
+            <button id="back-to-settings-from-change-password" class="absolute top-4 left-4 text-gray-400 hover:text-gray-600 transition-colors">
+                <i class="fa-solid fa-arrow-left"></i>
+            </button>
+            <button id="close-change-password-modal-button" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+            <h3 class="text-xl font-semibold text-gray-700 text-center mb-6">Alterar Senha</h3>
+            <div id="change-password-message" class="w-full text-center text-sm font-medium mb-4"></div>
+            <form id="change-password-form" class="space-y-4">
+                <div>
+                    <input id="change-new-password-input" type="password" placeholder="Nova Senha" required class="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-sky-500 focus:outline-none transition-all">
+                </div>
+                <div>
+                    <input id="change-confirm-password-input" type="password" placeholder="Confirme a Nova Senha" required class="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-sky-500 focus:outline-none transition-all">
+                </div>
+                <button type="submit" class="w-full bg-sky-500 text-white font-bold py-3 rounded-xl hover:bg-sky-600 transition-all shadow-lg transform active:scale-95">
+                    Alterar Senha
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal para Editar Perfil (Usuário Logado) -->
+    <div id="edit-profile-modal" class="modal fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center p-4 z-50 hidden">
+        <div class="bg-white p-6 rounded-2xl shadow-xl w-full max-w-md relative">
+            <button id="back-to-settings-from-edit-profile" class="absolute top-4 left-4 text-gray-400 hover:text-gray-600 transition-colors">
+                <i class="fa-solid fa-arrow-left"></i>
+            </button>
+            <button id="close-edit-profile-modal-button" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+            <h3 class="text-xl font-semibold text-gray-700 text-center mb-6">Editar Perfil</h3>
+            <div id="edit-profile-message" class="w-full text-center text-sm font-medium mb-4"></div>
+            <form id="edit-profile-form" class="space-y-4">
+                <div>
+                    <input id="edit-name-input" type="text" placeholder="Nome Completo" required class="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-sky-500 focus:outline-none transition-all">
+                </div>
+                <button type="submit" class="w-full bg-sky-500 text-white font-bold py-3 rounded-xl hover:bg-sky-600 transition-all shadow-lg transform active:scale-95">
+                    Salvar Alterações
+                </button>
+            </form>
+        </div>
+    </div>
+
     <script>
         // Supabase URL e API Key fornecidos pelo usuário
         const supabaseUrl = 'https://dnrvxzcdzvdexawijfcm.supabase.co';
@@ -184,6 +259,7 @@
         const noteTitleInput = document.getElementById('note-title-input');
         const noteContentInput = document.getElementById('note-content-input');
         const notesList = document.getElementById('notes-list');
+        const settingsButton = document.getElementById('settings-button');
 
         // Modal de recuperação de senha
         const forgotPasswordModal = document.getElementById('forgot-password-modal');
@@ -198,7 +274,31 @@
         const confirmNewPasswordInput = document.getElementById('confirm-new-password-input');
         const passwordResetMessage = document.getElementById('password-reset-message');
         const resetPasswordButton = document.getElementById('reset-password-button');
+
+        // Modal de Configurações
+        const settingsModal = document.getElementById('settings-modal');
+        const closeSettingsModalButton = document.getElementById('close-settings-modal-button');
+        const editProfileButton = document.getElementById('edit-profile-button');
+        const changePasswordButton = document.getElementById('change-password-button');
         
+        // Modal para Alterar Senha (Usuário Logado)
+        const changePasswordModal = document.getElementById('change-password-modal');
+        const closeChangePasswordModalButton = document.getElementById('close-change-password-modal-button');
+        const changePasswordForm = document.getElementById('change-password-form');
+        const changeNewPasswordInput = document.getElementById('change-new-password-input');
+        const changeConfirmPasswordInput = document.getElementById('change-confirm-password-input');
+        const changePasswordMessage = document.getElementById('change-password-message');
+        const backToSettingsFromChangePassword = document.getElementById('back-to-settings-from-change-password');
+        
+        // Modal para Editar Perfil (Usuário Logado)
+        const editProfileModal = document.getElementById('edit-profile-modal');
+        const closeEditProfileModalButton = document.getElementById('close-edit-profile-modal-button');
+        const editProfileForm = document.getElementById('edit-profile-form');
+        const editNameInput = document.getElementById('edit-name-input');
+        const editProfileMessage = document.getElementById('edit-profile-message');
+        const backToSettingsFromEditProfile = document.getElementById('back-to-settings-from-edit-profile');
+
+
         let isLogin = true;
 
         // Função para mostrar mensagem de status
@@ -309,7 +409,7 @@
             }
         });
         
-        // Lógica para redefinir a senha
+        // Lógica para redefinir a senha via email
         passwordResetForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             const newPassword = newPasswordInput.value;
@@ -339,6 +439,95 @@
                 showMessage('Erro ao alterar a senha: ' + error.message, true);
             }
         });
+
+        // Lógica para abrir o modal de configurações
+        settingsButton.addEventListener('click', () => {
+            settingsModal.classList.remove('hidden');
+        });
+
+        // Lógica para fechar o modal de configurações
+        closeSettingsModalButton.addEventListener('click', () => {
+            settingsModal.classList.add('hidden');
+        });
+
+        // Botão "Alterar Senha" no modal de configurações
+        changePasswordButton.addEventListener('click', () => {
+            settingsModal.classList.add('hidden');
+            changePasswordModal.classList.remove('hidden');
+        });
+
+        // Lógica para fechar o modal de alterar senha
+        closeChangePasswordModalButton.addEventListener('click', () => {
+            changePasswordModal.classList.add('hidden');
+            changePasswordMessage.textContent = '';
+            changePasswordForm.reset();
+        });
+
+        // Botão de voltar do modal de Alterar Senha
+        backToSettingsFromChangePassword.addEventListener('click', () => {
+            changePasswordModal.classList.add('hidden');
+            settingsModal.classList.remove('hidden');
+        });
+
+        // Lógica para alterar a senha do usuário logado
+        changePasswordForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const newPassword = changeNewPasswordInput.value;
+            const confirmNewPassword = changeConfirmPasswordInput.value;
+
+            if (newPassword !== confirmNewPassword) {
+                showMessage('As novas senhas não coincidem!', true, changePasswordMessage);
+                return;
+            }
+
+            try {
+                const { error } = await supabase.auth.updateUser({ password: newPassword });
+                if (error) throw error;
+                showMessage('Senha alterada com sucesso!', false, changePasswordMessage);
+                changePasswordForm.reset();
+            } catch (error) {
+                showMessage('Erro ao alterar a senha: ' + error.message, true, changePasswordMessage);
+            }
+        });
+
+        // Botão "Editar Perfil" no modal de configurações
+        editProfileButton.addEventListener('click', async () => {
+            const user = (await supabase.auth.getUser()).data.user;
+            if (user) {
+                editNameInput.value = user.user_metadata.full_name || '';
+            }
+            settingsModal.classList.add('hidden');
+            editProfileModal.classList.remove('hidden');
+        });
+
+        // Lógica para fechar o modal de editar perfil
+        closeEditProfileModalButton.addEventListener('click', () => {
+            editProfileModal.classList.add('hidden');
+            editProfileMessage.textContent = '';
+        });
+
+        // Botão de voltar do modal de Editar Perfil
+        backToSettingsFromEditProfile.addEventListener('click', () => {
+            editProfileModal.classList.add('hidden');
+            settingsModal.classList.remove('hidden');
+        });
+
+        // Lógica para salvar o perfil do usuário
+        editProfileForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const newName = editNameInput.value;
+
+            try {
+                const { error } = await supabase.auth.updateUser({ data: { full_name: newName } });
+                if (error) throw error;
+                showMessage('Perfil atualizado com sucesso!', false, editProfileMessage);
+                // Atualiza o nome na tela instantaneamente
+                userNameSpan.textContent = newName;
+            } catch (error) {
+                showMessage('Erro ao atualizar perfil: ' + error.message, true, editProfileMessage);
+            }
+        });
+
 
         // Lógica para adicionar uma nova nota
         addNoteForm.addEventListener('submit', async (e) => {
@@ -385,13 +574,11 @@
             noteCard.innerHTML = `
                 <div>
                     <h3 class="font-bold text-lg text-gray-800 mb-2">${note.title}</h3>
-                    <p class="text-sm text-gray-600">${note.content}</p>
+                    <p class="text-sm text-gray-600 break-all">${note.content}</p>
                 </div>
                 <div class="flex justify-end mt-4 space-x-2">
                     <button class="delete-note text-red-500 hover:text-red-700 transition-colors transform hover:scale-110" data-id="${note.id}">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                            <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" />
-                        </svg>
+                        <i class="fa-solid fa-trash"></i>
                     </button>
                 </div>
             `;
@@ -481,31 +668,31 @@
             }
         }
         
+        // Verifica a URL na inicialização para redefinição de senha
+        const urlParams = new URLSearchParams(window.location.hash.substring(1));
+        const type = urlParams.get('type');
+        if (type === 'recovery') {
+            authFormContainer.classList.add('hidden');
+            notesAppContainer.classList.add('hidden');
+            passwordResetContainer.classList.remove('hidden');
+            passwordResetMessage.textContent = 'Carregando... Por favor, aguarde.';
+            resetPasswordButton.disabled = true;
+        }
+
         // Monitorar o estado de autenticação do usuário
         supabase.auth.onAuthStateChange(async (event, session) => {
-            const urlParams = new URLSearchParams(window.location.hash.substring(1));
-            const type = urlParams.get('type');
+            const user = session?.user;
             
-            // Prioriza a verificação de redefinição de senha
-            if (type === 'recovery') {
-                authFormContainer.classList.add('hidden');
-                notesAppContainer.classList.add('hidden');
-                passwordResetContainer.classList.remove('hidden');
-                
-                // Espera a sessão ser validada pela Supabase
-                passwordResetMessage.textContent = 'Carregando... Por favor, aguarde.';
-                resetPasswordButton.disabled = true;
-
-                if (event === 'PASSWORD_RESET') {
+            // Lógica de exibição da interface do usuário
+            if (user) {
+                // Se o usuário está em modo de redefinição, não mude a tela
+                const urlParams = new URLSearchParams(window.location.hash.substring(1));
+                if (urlParams.get('type') === 'recovery') {
                     passwordResetMessage.textContent = 'Sessão verificada. Por favor, insira sua nova senha.';
                     resetPasswordButton.disabled = false;
+                    return;
                 }
-                return;
-            }
-            
-            // Lógica de exibição normal da interface do usuário
-            const user = session?.user;
-            if (user) {
+
                 authFormContainer.classList.add('hidden');
                 passwordResetContainer.classList.add('hidden');
                 notesAppContainer.classList.remove('hidden');
@@ -525,7 +712,6 @@
                 authForm.reset();
             }
         });
-
     </script>
 </body>
 </html>
