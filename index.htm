@@ -722,18 +722,17 @@
 
                 if (uploadError) throw uploadError;
 
-                const { data: publicUrlData } = supabase.storage
-                    .from('avatars')
-                    .getPublicUrl(filePath);
+                // Constrói a URL pública manualmente para garantir que funcione
+                const publicUrl = `${supabaseUrl}/storage/v1/object/public/avatars/${filePath}`;
 
                 const { error: updateError } = await supabase.auth.updateUser({
-                    data: { avatar_url: publicUrlData.publicUrl }
+                    data: { avatar_url: publicUrl }
                 });
 
                 if (updateError) throw updateError;
 
                 showMessage('Foto de perfil atualizada com sucesso!');
-                userAvatar.src = publicUrlData.publicUrl;
+                userAvatar.src = publicUrl;
 
             } catch (error) {
                 showMessage('Erro ao fazer upload da foto: ' + error.message, true);
