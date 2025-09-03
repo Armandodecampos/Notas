@@ -392,7 +392,7 @@
         // Modal de confirmação de exclusão
         const deleteNoteConfirmModal = document.getElementById('delete-note-confirm-modal');
         const confirmDeleteButton = document.getElementById('confirm-delete-button');
-        const cancelDeleteButton = document = document.getElementById('cancel-delete-button');
+        const cancelDeleteButton = document.getElementById('cancel-delete-button');
         
         // Modal para Visualização da Foto de Perfil
         const profilePictureModal = document.getElementById('profile-picture-modal');
@@ -873,24 +873,31 @@
             settingsModal.classList.remove('hidden');
         });
 
-        // Lógica para lidar com a redefinição de senha e autenticação
-        async function handleAuth() {
-            const urlParams = new URLSearchParams(window.location.hash.substring(1));
-            const type = urlParams.get('type');
-            
-            if (type === 'recovery') {
-                // Se estiver no fluxo de redefinição de senha, mostre o formulário e saia
-                authFormContainer.classList.add('hidden');
-                notesAppContainer.classList.add('hidden');
-                passwordResetContainer.classList.remove('hidden');
-                passwordResetMessage.textContent = 'Sessão verificada. Por favor, insira sua nova senha.';
-                resetPasswordButton.disabled = false;
-                return;
-            }
+        // Verifica a URL na inicialização para redefinição de senha
+        const urlParams = new URLSearchParams(window.location.hash.substring(1));
+        const type = urlParams.get('type');
+        if (type === 'recovery') {
+            authFormContainer.classList.add('hidden');
+            notesAppContainer.classList.add('hidden');
+            passwordResetContainer.classList.remove('hidden');
+            passwordResetMessage.textContent = 'Carregando... Por favor, aguarde.';
+            resetPasswordButton.disabled = true;
+        }
 
-            // Apenas lida com o estado de autenticação se não estiver em um fluxo de redefinição
-            const { data: { user } } = await supabase.auth.getUser();
+        // Monitorar o estado de autenticação do usuário
+        supabase.auth.onAuthStateChange(async (event, session) => {
+            const user = session?.user;
+            
+            // Lógica de exibição da interface do usuário
             if (user) {
+                // Se o usuário está em modo de redefinição, não mude a tela
+                const urlParams = new URLSearchParams(window.location.hash.substring(1));
+                if (urlParams.get('type') === 'recovery') {
+                    passwordResetMessage.textContent = 'Sessão verificada. Por favor, insira sua nova senha.';
+                    resetPasswordButton.disabled = false;
+                    return;
+                }
+
                 authFormContainer.classList.add('hidden');
                 passwordResetContainer.classList.add('hidden');
                 notesAppContainer.classList.remove('hidden');
@@ -909,14 +916,7 @@
                 notesList.innerHTML = '';
                 authForm.reset();
             }
-        }
-
-        // Adiciona um listener para o evento de hashchange para capturar o token de redefinição
-        window.addEventListener('hashchange', handleAuth);
-        
-        // Chamada inicial para configurar a página
-        handleAuth();
-
+        });
     </script>
 </body>
 </html>
