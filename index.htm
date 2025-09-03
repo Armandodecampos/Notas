@@ -230,9 +230,9 @@
 
             try {
                 // A URL para a qual o usuário será redirecionado após o clique no link do e-mail
-                // Substitua 'YOUR_REDIRECT_URL_HERE' pela URL do seu site, por exemplo: 'http://localhost:5500'
+                // A URL para a qual o usuário será redirecionado após o clique no link do e-mail
                 const { error } = await supabase.auth.resetPasswordForEmail(email, {
-                    redirectTo: 'YOUR_REDIRECT_URL_HERE'
+                    redirectTo: 'https://armandodecampos.github.io/Notas/'
                 });
                 
                 if (error) throw error;
