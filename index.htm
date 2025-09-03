@@ -255,7 +255,7 @@
             try {
                 // A URL para a qual o usuário será redirecionado após o clique no link do e-mail
                 const { error } = await supabase.auth.resetPasswordForEmail(email, {
-                    redirectTo: 'https://armandodecampos.github.io/Notas/'
+                    redirectTo: window.location.href // Use a URL atual para a redefinição funcionar
                 });
                 
                 if (error) throw error;
@@ -325,12 +325,19 @@
                 const { error } = await supabase.auth.updateUser({ password: newPassword });
                 if (error) throw error;
                 showMessage('Senha alterada com sucesso! Você já pode fazer login.');
+                
+                // Limpar os campos e forçar a exibição do formulário de login
+                newPasswordInput.value = '';
+                confirmNewPasswordInput.value = '';
                 passwordResetContainer.classList.add('hidden');
                 authFormContainer.classList.remove('hidden');
-                isLogin = true; // Força a tela para login
+                isLogin = true;
                 toggleAuthLink.textContent = 'Cadastre-se';
                 authTitle.textContent = 'Faça login';
                 authButton.textContent = 'Login';
+
+                // Limpar os parâmetros da URL após o reset
+                window.history.pushState({}, document.title, window.location.pathname);
             } catch (error) {
                 showMessage('Erro ao alterar a senha: ' + error.message, true);
             }
@@ -451,14 +458,38 @@
             }
         });
 
-        // Monitorar o estado de autenticação do usuário
-        supabase.auth.onAuthStateChange(async (event, session) => {
-            if (event === 'PASSWORD_RESET') {
+        // Função para buscar as notas do usuário
+        async function fetchNotes() {
+            try {
+                const user = (await supabase.auth.getUser()).data.user;
+                if (!user) return;
+                const { data: notes, error } = await supabase
+                    .from('notes')
+                    .select('*')
+                    .eq('user_id', user.id)
+                    .order('created_at', { ascending: false });
+                if (error) throw error;
+                renderNotes(notes);
+            } catch (error) {
+                showMessage('Erro ao carregar notas: ' + error.message, true);
+            }
+        }
+        
+        // --- LÓGICA CORRIGIDA PARA REDEFINIÇÃO DE SENHA NA URL ---
+        function checkPasswordResetUrl() {
+            const urlParams = new URLSearchParams(window.location.hash.substring(1));
+            const type = urlParams.get('type');
+            if (type === 'recovery') {
                 authFormContainer.classList.add('hidden');
                 notesAppContainer.classList.add('hidden');
                 passwordResetContainer.classList.remove('hidden');
-                showMessage('Por favor, defina sua nova senha.');
-            } else if (session?.user) {
+                showMessage('Por favor, defina sua nova senha.', false);
+            }
+        }
+        
+        // Monitorar o estado de autenticação do usuário
+        supabase.auth.onAuthStateChange(async (event, session) => {
+            if (session?.user) {
                 // Usuário logado
                 authFormContainer.classList.add('hidden');
                 passwordResetContainer.classList.add('hidden');
@@ -478,25 +509,14 @@
                 userNameSpan.textContent = '';
                 userAvatar.src = 'https://placehold.co/100x100/A0A0A0/ffffff?text=User';
                 notesList.innerHTML = '';
+                // Limpa o formulário para evitar que os dados persistam
+                authForm.reset();
             }
         });
-        
-        // Função para buscar as notas do usuário
-        async function fetchNotes() {
-            try {
-                const user = (await supabase.auth.getUser()).data.user;
-                if (!user) return;
-                const { data: notes, error } = await supabase
-                    .from('notes')
-                    .select('*')
-                    .eq('user_id', user.id)
-                    .order('created_at', { ascending: false });
-                if (error) throw error;
-                renderNotes(notes);
-            } catch (error) {
-                showMessage('Erro ao carregar notas: ' + error.message, true);
-            }
-        }
+
+        // Executar a verificação na URL ao carregar a página
+        window.onload = checkPasswordResetUrl;
+
     </script>
 </body>
 </html>
